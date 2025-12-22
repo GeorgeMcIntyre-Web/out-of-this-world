@@ -1,8 +1,8 @@
 # Roadmap
 
-## Version 0.1 (Current) — Scaffold and Core
+## Version 0.1 — Scaffold and Core
 
-**Status**: In development
+**Status**: ✅ Complete
 
 **Deliverables**:
 - ✅ Repository structure and documentation
@@ -14,17 +14,24 @@
 - ✅ CI/CD pipeline
 - ✅ Test suite
 
-## Version 0.2 — Extended Simulation
+## Version 0.2 (Current) — Extended Simulation
 
-**Target**: Q2 2025
+**Status**: ✅ Complete
 
 **Deliverables**:
-- Extended simulation scenarios (multi-orbit, perturbations)
+- ✅ J2 orbital perturbations (Earth oblateness)
+- ✅ Improved EKF with gravitational measurement models
+  - ✅ Gravity vector in inertial frame (default)
+  - ✅ Gravity magnitude mode (legacy)
+- ✅ Visualization utilities (6-plot demo output)
+- ✅ Measurement model refactoring (clean, testable API)
+- ✅ Finite-difference Jacobian validation tests
+- ✅ Documentation updates
+
+**Deferred to v0.3**:
 - Particle filter implementation
 - Sensor model expansions (gyroscope, magnetometer stubs)
-- Visualization utilities (basic plotting)
 - Performance benchmarks
-- Documentation improvements
 
 ## Version 0.3 — Sensor Model Refinements
 

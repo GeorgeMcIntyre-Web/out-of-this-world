@@ -15,3 +15,6 @@ R_EARTH: Final[float] = 6.371e6  # m
 # Solar system (approximate)
 M_SUN: Final[float] = 1.989e30  # kg
 AU: Final[float] = 1.496e11  # m (astronomical unit)
+
+# Earth gravitational harmonics
+J2_EARTH: Final[float] = 1.08263e-3  # J2 coefficient (dimensionless)

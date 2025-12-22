@@ -68,3 +68,6 @@ yarn-error.log*
 # Build artifacts
 *.log
 *.tmp
+
+# Demo outputs
+demo_results.png

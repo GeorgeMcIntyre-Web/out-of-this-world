@@ -149,6 +149,11 @@ class ExtendedKalmanFilter:
         z_pred = h(self.state)
 
         # Innovation
+        # Ensure both are column vectors
+        if z.ndim == 1:
+            z = z.reshape(-1, 1)
+        if z_pred.ndim == 1:
+            z_pred = z_pred.reshape(-1, 1)
         y = z - z_pred
 
         # Innovation covariance
@@ -158,7 +163,7 @@ class ExtendedKalmanFilter:
         K = self.covariance @ H.T @ np.linalg.inv(S)
 
         # State update
-        self.state = self.state + K @ y
+        self.state = self.state + (K @ y).flatten()
 
         # Covariance update
         I = np.eye(self.covariance.shape[0])

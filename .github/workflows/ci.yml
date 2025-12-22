@@ -48,6 +48,11 @@ jobs:
     - name: Run tests
       run: uv run pytest
 
-    - name: Run demo script
+    - name: Install visualization dependencies
+      run: uv pip install matplotlib
+
+    - name: Run demo script (non-interactive)
       run: uv run python scripts/demo_run.py
+      env:
+        MPLBACKEND: Agg
 

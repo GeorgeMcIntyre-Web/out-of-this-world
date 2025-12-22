@@ -21,6 +21,14 @@ OutOfThisWorld investigates how advanced sensing and inference techniques could 
 - **Placeholder BOM** and risk analysis for space-hardenable payloads
 - **Research sandbox** for testing hypotheses about measurable signals
 
+## What's Implemented (v0.2)
+
+- **J2 orbital perturbations**: Earth oblateness effects in orbit propagation
+- **Extended Kalman filter**: With gravitational measurement models (vector and magnitude modes)
+- **Gravitational measurement models**: Gravity vector in inertial frame (default) and magnitude modes
+- **Visualization**: Demo script generates orbit plots, error analysis, and measurement comparisons
+- **Comprehensive tests**: 32 tests including finite-difference Jacobian validation
+
 ## What This Repo Is Not
 
 - **Not a claim** of proving other universes or exotic physics
@@ -69,6 +77,14 @@ uv run python scripts/demo_run.py
 python scripts/demo_run.py
 ```
 
+The demo script runs a circular orbit simulation with:
+- J2 perturbations enabled
+- Gravity vector measurements (inertial frame)
+- Extended Kalman filter state estimation
+- Visualization plots saved to `demo_results.png`
+
+**Note**: This demo uses simplified "gravimeter" measurements (gravity vector in inertial frame) to keep the estimation problem observable in a toy setup. Real accelerometers in free-fall would measure zero acceleration, not gravitational acceleration.
+
 ### Linting and Formatting
 
 ```bash
@@ -100,9 +116,9 @@ out-of-this-world/
 
 See [docs/ROADMAP.md](docs/ROADMAP.md) for detailed milestones.
 
-- **v0.1** (current): Repository scaffold, basic orbit propagation, sensor models, EKF
-- **v0.2**: Extended simulation scenarios, particle filtering, sensor model expansions
-- **v0.3**: Interferometer model refinements, timing models, lensing effects
+- **v0.1**: Repository scaffold, basic orbit propagation, sensor models, EKF
+- **v0.2** (current): J2 perturbations, improved EKF with gravimeter modes, visualization
+- **v0.3**: Particle filter, sensor model expansions (gyroscope, magnetometer), timing models
 - **v0.4**: Constellation studies, distributed estimation
 - **v1.0**: Reference design document, validated sensor models
 
