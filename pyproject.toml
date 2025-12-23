@@ -20,8 +20,12 @@ classifiers = [
 ]
 
 dependencies = [
-    "numpy>=1.26.0",
-    "scipy>=1.11.0",
+    "numpy>=1.26.0,<2.0.0",
+    "scipy>=1.11.0,<2.0.0",
+    "matplotlib>=3.8.0,<4.0.0",
+    "plotly>=5.18.0,<6.0.0",
+    "kaleido==0.2.1",
+    "pandas>=2.1.0,<3.0.0",
 ]
 
 [project.optional-dependencies]
@@ -30,6 +34,10 @@ dev = [
     "pytest-cov>=4.1.0",
     "ruff>=0.1.0",
     "mypy>=1.8.0",
+]
+
+investor-demo = [
+    "manim>=0.18.0",
 ]
 
 [build-system]
@@ -103,4 +111,7 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
 ]
+
+## Note: uv doesn't support `[tool.uv.dependencies]` in modern versions.
+## Dependencies are declared in `[project].dependencies` and optional extras above.
 
