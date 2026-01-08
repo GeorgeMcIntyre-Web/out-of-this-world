@@ -102,6 +102,24 @@ uv run ootw --scenario compare
 # All results saved to results/ directory
 ```
 
+### Web Visualization
+
+The project includes a full-stack visualization dashboard.
+
+1. **Start the Backend API**:
+   ```bash
+   uv run uvicorn api.main:app --reload
+   # Runs on http://localhost:8000
+   ```
+
+2. **Start the Frontend Dashboard**:
+   ```bash
+   cd web
+   npm install  # First time only
+   npm run dev
+   # Runs on http://localhost:5173
+   ```
+
 ### Run Legacy Demo
 
 ```bash
