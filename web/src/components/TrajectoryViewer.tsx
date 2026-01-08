@@ -3,7 +3,7 @@
  */
 
 import { Canvas } from "@react-three/fiber";
-import { OrbitControls, Line, Sphere, Grid, Stars, useTexture } from "@react-three/drei";
+import { OrbitControls, Line, Grid, Stars, useTexture } from "@react-three/drei";
 import { useMemo, Suspense } from "react";
 import * as THREE from "three";
 import type { ExperimentResult } from "../types/simulation";

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import "./App.css";
 import { fetchScenarios, pingHealth, runSimulation } from "./api/sim";
-import type { Frame } from "./types/sim";
 import { useSimulationPlayback } from "./hooks/useSimulationPlayback";
 import { SceneHost, type SceneUiState } from "./components/SceneHost";
 
@@ -20,6 +19,8 @@ function App() {
   const [ui, setUi] = useState<SceneUiState>({
     showReferenceAxes: true,
     showEclipticGrid: true,
+    showInertialPlane: false,
+    showCameraHorizon: false,
     showOrbitalPlanes: false,
     showSpacetimeSurface: false,
     showClocks: true,
@@ -206,6 +207,22 @@ function App() {
               onChange={(e) => setUi((s) => ({ ...s, showEclipticGrid: e.target.checked }))}
             />
             Ecliptic grid
+          </label>
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={ui.showInertialPlane ?? false}
+              onChange={(e) => setUi((s) => ({ ...s, showInertialPlane: e.target.checked }))}
+            />
+            Inertial plane
+          </label>
+          <label className="row">
+            <input
+              type="checkbox"
+              checked={ui.showCameraHorizon ?? false}
+              onChange={(e) => setUi((s) => ({ ...s, showCameraHorizon: e.target.checked }))}
+            />
+            Camera horizon
           </label>
           <label className="row">
             <input

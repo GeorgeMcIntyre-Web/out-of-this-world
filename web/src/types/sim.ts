@@ -10,6 +10,10 @@ export type BodySnapshot = {
   position_m: Vec3;
   radius_m: number;
   color?: string;
+  schwarzschild_radius_m?: number | null;
+  time_dilation_factor_at_surface?: number | null;
+  time_dilation_surface?: number | null;
+  potential_phi?: number | null;
 };
 
 export type SensorReading = {
@@ -25,6 +29,9 @@ export type CraftSnapshot = {
   velocity_mps: Vec3;
   attitude_quat: Quat;
   sensors: SensorReading[];
+  proper_time_s?: number | null;
+  time_dilation_factor?: number | null;
+  potential_phi?: number | null;
 };
 
 export type Frame = {

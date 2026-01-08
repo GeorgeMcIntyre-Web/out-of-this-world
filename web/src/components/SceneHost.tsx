@@ -1,12 +1,14 @@
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Html, Line, OrbitControls, Stars, Text } from "@react-three/drei";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import type { Frame, Vec3 } from "../types/sim";
 
 export type SceneUiState = {
   showReferenceAxes: boolean;
   showEclipticGrid: boolean;
+  showInertialPlane?: boolean;
+  showCameraHorizon?: boolean;
   showOrbitalPlanes: boolean;
   showSpacetimeSurface: boolean;
   showClocks: boolean;
@@ -49,6 +51,46 @@ function normalizeSafe(v: THREE.Vector3): THREE.Vector3 {
   return v.multiplyScalar(1 / len);
 }
 
+type OrbitalElements = {
+  orbitNormal: THREE.Vector3;
+  inclinationDeg: number;
+  omegaDeg: number;
+  nodeDir: THREE.Vector3;
+};
+
+function computeOrbitalElements(frames: Frame[], craftId: string): OrbitalElements | null {
+  if (frames.length === 0) return null;
+  const first = frames.find((f) => f.craft.some((c) => c.id === craftId)) ?? null;
+  if (first === null) return null;
+  const craft = first.craft.find((c) => c.id === craftId) ?? null;
+  if (craft === null) return null;
+
+  const r = new THREE.Vector3(...craft.position_m);
+  const v = new THREE.Vector3(...craft.velocity_mps);
+  const h = new THREE.Vector3().crossVectors(r, v);
+  if (h.length() <= 1e-9) return null;
+  const orbitNormal = h.normalize();
+
+  const k = new THREE.Vector3(0, 1, 0);
+  const c = Math.max(-1, Math.min(1, orbitNormal.dot(k)));
+  const inclinationDeg = (Math.acos(c) * 180) / Math.PI;
+
+  const node = new THREE.Vector3().crossVectors(k, orbitNormal);
+  if (node.length() <= 1e-9) {
+    return {
+      orbitNormal,
+      inclinationDeg,
+      omegaDeg: 0,
+      nodeDir: new THREE.Vector3(1, 0, 0),
+    };
+  }
+
+  const nodeDir = node.normalize();
+  const omega = Math.atan2(nodeDir.z, nodeDir.x);
+  const omegaDeg = ((omega * 180) / Math.PI + 360) % 360;
+  return { orbitNormal, inclinationDeg, omegaDeg, nodeDir };
+}
+
 function warpTowardMass(position: THREE.Vector3, strength: number, rSScene: number): THREE.Vector3 {
   if (strength <= 0) return position;
   const r = position.length();
@@ -66,6 +108,33 @@ function ReferenceAxes({ length, opacity }: { length: number; opacity: number })
       <Line points={[[0, 0, 0], [0, length, 0]]} color="#22c55e" transparent opacity={o} />
       <Line points={[[0, 0, 0], [0, 0, length]]} color="#3b82f6" transparent opacity={o} />
     </>
+  );
+}
+
+function InertialPlane({ radius, opacity }: { radius: number; opacity: number }) {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]}>
+      <circleGeometry args={[radius, 96]} />
+      <meshBasicMaterial color="#94a3b8" transparent opacity={opacity} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+function CameraHorizonPlane({ size, opacity }: { size: number; opacity: number }) {
+  const ref = useRef<THREE.Mesh>(null);
+  const { camera } = useThree();
+
+  useFrame(() => {
+    const mesh = ref.current;
+    if (mesh === null) return;
+    mesh.quaternion.copy(camera.quaternion);
+  });
+
+  return (
+    <mesh ref={ref} position={[0, 0, 0]}>
+      <planeGeometry args={[size, size, 1, 1]} />
+      <meshBasicMaterial color="#94a3b8" transparent opacity={opacity} side={THREE.DoubleSide} />
+    </mesh>
   );
 }
 
@@ -152,28 +221,24 @@ function OrbitalPlane({
 }
 
 function NodesLine({
-  orbitNormal,
+  nodeDir,
+  omegaDeg,
   radius,
 }: {
-  orbitNormal: THREE.Vector3;
+  nodeDir: THREE.Vector3;
+  omegaDeg: number;
   radius: number;
 }) {
-  const eclipticNormal = new THREE.Vector3(0, 1, 0);
-  const dir = new THREE.Vector3().crossVectors(orbitNormal, eclipticNormal);
-  if (dir.length() <= 1e-9) return null;
-
-  normalizeSafe(dir);
+  if (nodeDir.length() <= 1e-9) return null;
+  const dir = nodeDir.clone();
   const p1 = dir.clone().multiplyScalar(-radius);
   const p2 = dir.clone().multiplyScalar(radius);
-  const omega = Math.atan2(dir.z, dir.x);
-  const omegaDeg = ((omega * 180) / Math.PI + 360) % 360;
-
   const asc = dir.clone().multiplyScalar(radius * 0.9);
 
   return (
     <group>
       <Line points={[[p1.x, p1.y, p1.z], [p2.x, p2.y, p2.z]]} color="#fbbf24" transparent opacity={0.55} />
-      <mesh position={[asc.x, asc.y, asc.z]} rotation={[0, -omega, 0]}>
+      <mesh position={[asc.x, asc.y, asc.z]}>
         <coneGeometry args={[radius * 0.03, radius * 0.08, 3]} />
         <meshBasicMaterial color="#fbbf24" transparent opacity={0.9} />
       </mesh>
@@ -248,6 +313,32 @@ function LightBendingRays({ radius, strength, rSScene }: { radius: number; stren
   );
 }
 
+function formatDistanceMeters(m: number): string {
+  const a = Math.abs(m);
+  if (a >= 1e9) return `${(m / 1e9).toFixed(2)} Gm`;
+  if (a >= 1e6) return `${(m / 1e6).toFixed(2)} Mm`;
+  if (a >= 1e3) return `${(m / 1e3).toFixed(2)} km`;
+  return `${m.toFixed(0)} m`;
+}
+
+function HudProbe({
+  onUpdate,
+}: {
+  onUpdate: (next: { cameraDistance: number; fovDeg: number }) => void;
+}) {
+  const { camera } = useThree();
+  const lastRef = useRef(0);
+
+  useFrame(({ clock }) => {
+    const t = clock.getElapsedTime();
+    if (t - lastRef.current < 0.2) return;
+    lastRef.current = t;
+    onUpdate({ cameraDistance: camera.position.length(), fovDeg: (camera as THREE.PerspectiveCamera).fov ?? 45 });
+  });
+
+  return null;
+}
+
 export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, ui }: Props) {
   const maxAbs = useMemo(() => maxAbsFromFrames(frames), [frames]);
   const sceneScale = useMemo(() => {
@@ -256,8 +347,8 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
     return 1 / base;
   }, [maxAbs]);
 
-  const radius = useMemo(() => 1 / sceneScale, [sceneScale]); // in "meters", before scale
-  const sceneRadius = useMemo(() => radius * sceneScale, [radius, sceneScale]);
+  const metersRadius = useMemo(() => 1 / sceneScale, [sceneScale]); // "meters" extents
+  const sceneRadius = useMemo(() => metersRadius * sceneScale, [metersRadius, sceneScale]);
 
   const compact = useMemo(() => {
     if (frame === null) return null;
@@ -278,24 +369,10 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
     return new THREE.Vector3(...scaleVec3(craft.position_m, sceneScale));
   }, [frame, sceneScale, selectedId]);
 
-  const orbitNormal = useMemo(() => {
-    if (frame === null) return null;
+  const orbital = useMemo(() => {
     if (selectedId === null) return null;
-    const craft = frame.craft.find((c) => c.id === selectedId) ?? null;
-    if (craft === null) return null;
-    const p = new THREE.Vector3(...craft.position_m);
-    const v = new THREE.Vector3(...craft.velocity_mps);
-    const h = new THREE.Vector3().crossVectors(p, v);
-    if (h.length() <= 1e-9) return null;
-    return h.normalize();
-  }, [frame, selectedId]);
-
-  const inclinationDeg = useMemo(() => {
-    if (orbitNormal === null) return 0;
-    const e = new THREE.Vector3(0, 1, 0);
-    const c = Math.max(-1, Math.min(1, orbitNormal.dot(e)));
-    return (Math.acos(c) * 180) / Math.PI;
-  }, [orbitNormal]);
+    return computeOrbitalElements(frames, selectedId);
+  }, [frames, selectedId]);
 
   const trail = useMemo(() => {
     if (frames.length === 0) return null;
@@ -324,11 +401,12 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
     });
   }, [rSScene, trail, ui.relativityStrength]);
 
-  const controlsRef = useRef<THREE.EventDispatcher>(null);
+  const controlsRef = useRef<any>(null);
+  const [hud, setHud] = useState<{ cameraDistance: number; fovDeg: number } | null>(null);
 
   useEffect(() => {
     if (ui.focusSelected !== true) return;
-    const controls = controlsRef.current as unknown as OrbitControls | null;
+    const controls = controlsRef.current as any;
     if (controls === null) return;
     if (selectedPos === null) return;
     controls.target.set(selectedPos.x, selectedPos.y, selectedPos.z);
@@ -339,9 +417,22 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
     return <div className="trajectory-viewer empty">Run a simulation to see 3D.</div>;
   }
 
+  const rulerMeters = (() => {
+    if (hud === null) return null;
+    if (sceneScale <= 0) return null;
+    const fovRad = (hud.fovDeg * Math.PI) / 180;
+    const viewHeight = 2 * hud.cameraDistance * Math.tan(fovRad / 2);
+    const sceneLen = viewHeight * 0.25;
+    const metersLen = sceneLen / sceneScale;
+    return Math.max(0, metersLen);
+  })();
+
   return (
     <div className="trajectory-viewer">
-      <Canvas camera={{ position: [1.5, 1.1, 1.5], fov: 45 }}>
+      <Canvas
+        camera={{ position: [1.5, 1.1, 1.5], fov: 45 }}
+        onPointerMissed={() => onSelect(null)}
+      >
         <fog attach="fog" args={["#0b1020", 2, 6]} />
         <ambientLight intensity={0.25} />
         <pointLight position={[2, 2, 2]} intensity={1.2} />
@@ -349,6 +440,8 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
 
         {ui.showReferenceAxes && <ReferenceAxes length={sceneRadius * 0.6} opacity={0.6} />}
         {ui.showEclipticGrid && <EclipticDisk radius={sceneRadius * 0.75} />}
+        {ui.showInertialPlane && <InertialPlane radius={sceneRadius * 0.62} opacity={0.06} />}
+        {ui.showCameraHorizon && <CameraHorizonPlane size={sceneRadius * 0.9} opacity={0.02} />}
 
         {ui.showSpacetimeSurface && (
           <SpacetimeSurface radius={sceneRadius * 0.65} strength={ui.relativityStrength} />
@@ -358,14 +451,14 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
           <LightBendingRays radius={sceneRadius * 0.6} strength={ui.relativityStrength} rSScene={rSScene} />
         )}
 
-        {ui.showOrbitalPlanes && orbitNormal !== null && (
+        {ui.showOrbitalPlanes && orbital !== null && (
           <>
             <OrbitalPlane
-              normal={orbitNormal}
+              normal={orbital.orbitNormal}
               radius={sceneRadius * 0.6}
-              inclinationDeg={inclinationDeg}
+              inclinationDeg={orbital.inclinationDeg}
             />
-            <NodesLine orbitNormal={orbitNormal} radius={sceneRadius * 0.65} />
+            <NodesLine nodeDir={orbital.nodeDir} omegaDeg={orbital.omegaDeg} radius={sceneRadius * 0.65} />
           </>
         )}
 
@@ -464,19 +557,36 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
           enableRotate
           enableZoom
           makeDefault
-          onPointerMissed={() => onSelect(null)}
         />
+
+        <HudProbe onUpdate={setHud} />
       </Canvas>
 
-      <div className="legend">
-        <div className="legend-item">
-          <span className="color-box" style={{ background: "#60a5fa" }} />
-          Flat trail
+      <div className="hud">
+        <div className="hud-card">
+          <div className="hud-title">Legend</div>
+          <div className="hud-row">
+            <span className="swatch" style={{ background: "#60a5fa" }} /> Flat trail
+          </div>
+          <div className="hud-row">
+            <span className="swatch" style={{ background: "#fb923c" }} /> Relativity overlay
+          </div>
+          <div className="hud-row muted">
+            Axes: {ui.showReferenceAxes ? "on" : "off"} · Planes:{" "}
+            {ui.showOrbitalPlanes || ui.showEclipticGrid || ui.showInertialPlane ? "on" : "off"} · Clocks:{" "}
+            {ui.showClocks ? "on" : "off"}
+          </div>
         </div>
-        <div className="legend-item">
-          <span className="color-box" style={{ background: "#fb923c" }} />
-          Relativity overlay
-        </div>
+
+        {rulerMeters !== null && rulerMeters > 0 && (
+          <div className="hud-card">
+            <div className="hud-title">Scale</div>
+            <div className="ruler">
+              <div className="ruler-line" />
+              <div className="ruler-label">{formatDistanceMeters(rulerMeters)}</div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
