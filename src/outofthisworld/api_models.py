@@ -24,6 +24,8 @@ class BodySnapshot:
     position_m: Vec3
     radius_m: float
     color: str | None = None
+    schwarzschild_radius_m: float | None = None
+    time_dilation_factor_at_surface: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +43,9 @@ class CraftSnapshot:
     velocity_mps: Vec3
     attitude_quat: Quat
     sensors: list[SensorReading]
+    proper_time_s: float | None = None
+    time_dilation_factor: float | None = None
+    potential_phi: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

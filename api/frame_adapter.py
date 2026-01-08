@@ -17,6 +17,7 @@ from outofthisworld.api_models import (
     frame_to_dict,
     vec3_from_np,
 )
+from outofthisworld.physics.constants import C, G
 from outofthisworld.sim.experiments import ExperimentConfig, ExperimentResults, load_config_from_yaml
 
 
@@ -29,8 +30,17 @@ def load_experiment_config(path: str) -> ExperimentConfig:
 
 
 def _default_bodies() -> list[BodySnapshot]:
-    # This project’s current scenarios are “deep space” with no gravity model.
-    # Provide a minimal reference frame marker to orient the user.
+    # Provide a minimal reference frame marker + a "compact object" for GR visuals.
+    #
+    # The mass is chosen so that the Schwarzschild radius is ~1000 m, which yields a
+    # visually meaningful time dilation near a few million meters without singularities.
+    mass_kg = (1_000.0 * (C**2)) / (2.0 * G)
+    mu = float(G * mass_kg)
+    r_s = float(2.0 * mu / (C**2))
+    surface_r = 100_000.0
+    surface_phi = -mu / surface_r
+    surface_dilation = float(np.sqrt(max(0.0, 1.0 + 2.0 * surface_phi / (C**2))))
+
     return [
         BodySnapshot(
             id="origin",
@@ -39,7 +49,17 @@ def _default_bodies() -> list[BodySnapshot]:
             position_m=(0.0, 0.0, 0.0),
             radius_m=1_000_000.0,
             color="#ffcc66",
-        )
+        ),
+        BodySnapshot(
+            id="compact",
+            name="Compact object",
+            kind="bh",
+            position_m=(0.0, 0.0, 0.0),
+            radius_m=surface_r,
+            color="#a855f7",
+            schwarzschild_radius_m=r_s,
+            time_dilation_factor_at_surface=surface_dilation,
+        ),
     ]
 
 
@@ -85,15 +105,39 @@ def experiment_to_frames(
     bodies = _default_bodies()
     events = _star_tracker_events(results.config)
 
+    body = next((b for b in bodies if b.id == "compact"), None)
+    if body is None:
+        return []
+
+    r_s = body.schwarzschild_radius_m
+    if r_s is None:
+        return []
+
+    mu = float(r_s * (C**2) / 2.0)
+    tau_true = 0.0
+    tau_est = 0.0
+
     frames: list[Frame] = []
     for i, t in enumerate(time):
         t_s = float(t)
+        dt_s = 0.0
+        if i > 0:
+            dt_s = float(time[i] - time[i - 1])
 
         craft: list[CraftSnapshot] = []
 
         true_pos = results.true_position[i]
         true_vel = results.true_velocity[i]
         true_att = results.true_attitude[i]
+
+        r_true = float(np.linalg.norm(true_pos))
+        phi_true = 0.0
+        dilation_true = 1.0
+        if r_true > 1e-6:
+            phi_true = float(-mu / r_true)
+            dilation_true = float(np.sqrt(max(0.0, 1.0 + 2.0 * phi_true / (C**2))))
+
+        tau_true = float(tau_true + dt_s * dilation_true)
 
         craft.append(
             CraftSnapshot(
@@ -109,6 +153,9 @@ def experiment_to_frames(
                         value={},
                     )
                 ],
+                proper_time_s=tau_true,
+                time_dilation_factor=dilation_true,
+                potential_phi=phi_true,
             )
         )
 
@@ -116,6 +163,15 @@ def experiment_to_frames(
             est_pos = results.est_position[i]
             est_vel = results.est_velocity[i]
             est_att = results.est_attitude[i]
+
+            r_est = float(np.linalg.norm(est_pos))
+            phi_est = 0.0
+            dilation_est = 1.0
+            if r_est > 1e-6:
+                phi_est = float(-mu / r_est)
+                dilation_est = float(np.sqrt(max(0.0, 1.0 + 2.0 * phi_est / (C**2))))
+
+            tau_est = float(tau_est + dt_s * dilation_est)
 
             pos_err = results.pos_error[i]
             vel_err = results.vel_error[i]
@@ -145,6 +201,9 @@ def experiment_to_frames(
                             },
                         )
                     ],
+                    proper_time_s=tau_est,
+                    time_dilation_factor=dilation_est,
+                    potential_phi=phi_est,
                 )
             )
 
