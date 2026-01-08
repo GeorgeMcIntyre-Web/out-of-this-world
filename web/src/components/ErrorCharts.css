@@ -1,0 +1,47 @@
+.error-charts {
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 1.5rem;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.error-charts h3 {
+    margin: 0 0 1rem 0;
+    font-size: 1rem;
+    color: #f1f5f9;
+    font-weight: 600;
+}
+
+.error-charts.empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 350px;
+}
+
+.error-charts .empty-state {
+    text-align: center;
+    color: #64748b;
+}
+
+.error-charts .empty-state .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.error-charts .empty-state p {
+    font-size: 0.9rem;
+}
+
+/* Recharts overrides */
+.recharts-legend-item-text {
+    color: #94a3b8 !important;
+    font-size: 0.75rem;
+}
+
+.recharts-tooltip-label {
+    color: #f1f5f9 !important;
+}
