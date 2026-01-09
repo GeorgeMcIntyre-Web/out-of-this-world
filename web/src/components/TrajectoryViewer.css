@@ -57,3 +57,92 @@
     height: 12px;
     border-radius: 3px;
 }
+
+.hud {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    pointer-events: none;
+}
+
+.hud-card {
+    background: rgba(15, 23, 42, 0.78);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
+    min-width: 220px;
+}
+
+.hud-title {
+    font-size: 0.75rem;
+    color: #cbd5e1;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.4rem;
+    opacity: 0.9;
+}
+
+.hud-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    color: #e2e8f0;
+    line-height: 1.35;
+}
+
+.hud-row.muted {
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    color: rgba(148, 163, 184, 0.9);
+}
+
+.swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+    flex: 0 0 auto;
+}
+
+.ruler {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ruler-line {
+    height: 2px;
+    width: 140px;
+    background: rgba(226, 232, 240, 0.7);
+    border-radius: 2px;
+}
+
+.ruler-label {
+    font-size: 0.75rem;
+    color: rgba(226, 232, 240, 0.9);
+}
+
+.clock {
+    pointer-events: none;
+    background: rgba(2, 6, 23, 0.75);
+    border: 1px solid rgba(148, 163, 184, 0.15);
+    border-radius: 8px;
+    padding: 0.5rem 0.6rem;
+    min-width: 170px;
+}
+
+.clock-title {
+    font-size: 0.75rem;
+    color: #e2e8f0;
+    margin-bottom: 0.25rem;
+    white-space: nowrap;
+}
+
+.clock-row {
+    font-size: 0.72rem;
+    color: rgba(148, 163, 184, 0.95);
+    white-space: nowrap;
+}

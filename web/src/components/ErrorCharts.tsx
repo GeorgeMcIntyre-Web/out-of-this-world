@@ -3,7 +3,6 @@
  */
 
 import {
-    LineChart,
     Line,
     XAxis,
     YAxis,
@@ -107,7 +106,10 @@ export function ErrorCharts({ experiments }: ErrorChartsProps) {
                             borderRadius: "8px",
                         }}
                         labelFormatter={(v) => `Time: ${formatTime(v as number)}`}
-                        formatter={(value: number) => [formatError(value), ""]}
+                        formatter={(value) => {
+                            if (typeof value !== "number") return ["—", ""];
+                            return [formatError(value), ""];
+                        }}
                     />
                     <Legend />
 
