@@ -436,7 +436,7 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
         <fog attach="fog" args={["#0b1020", 2, 6]} />
         <ambientLight intensity={0.25} />
         <pointLight position={[2, 2, 2]} intensity={1.2} />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={0.4} />
+        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={0} />
 
         {ui.showReferenceAxes && <ReferenceAxes length={sceneRadius * 0.6} opacity={0.6} />}
         {ui.showEclipticGrid && <EclipticDisk radius={sceneRadius * 0.75} />}
@@ -465,11 +465,13 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
         {trail !== null && <Line points={trail} color="#60a5fa" lineWidth={2} />}
         {trailRel !== null && <Line points={trailRel} color="#fb923c" lineWidth={2} />}
 
-        {frame.bodies.map((b) => {
+        {frame.bodies.map((b, idx) => {
           const pos = scaleVec3(b.position_m, sceneScale);
           const r = Math.max(0.01, b.radius_m * sceneScale);
           const color = b.color ?? "#94a3b8";
           const isSelected = selectedId === b.id;
+          // Vertical offset for label to prevent overlap (stagger based on index)
+          const labelYOffset = r + 0.2 + idx * 0.35;
 
           return (
             <mesh
@@ -484,21 +486,29 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
               <sphereGeometry args={[r, 32, 32]} />
               <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.15} />
               {ui.showClocks && (
-                <Html distanceFactor={6}>
-                  <div className="clock">
+                <Html
+                  position={[0, labelYOffset, 0]}
+                  center
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div className={`clock ${isSelected ? 'clock--expanded' : ''}`}>
                     <div className="clock-title">{b.name}</div>
-                    <div className="clock-row">
-                      rₛ:{" "}
-                      {b.schwarzschild_radius_m === undefined || b.schwarzschild_radius_m === null
-                        ? "—"
-                        : `${b.schwarzschild_radius_m.toFixed(0)} m`}
-                    </div>
-                    <div className="clock-row">
-                      rate@surface:{" "}
-                      {b.time_dilation_factor_at_surface === undefined || b.time_dilation_factor_at_surface === null
-                        ? "—"
-                        : `${b.time_dilation_factor_at_surface.toFixed(9)}×`}
-                    </div>
+                    {isSelected && (
+                      <>
+                        <div className="clock-row">
+                          rₛ:{" "}
+                          {b.schwarzschild_radius_m === undefined || b.schwarzschild_radius_m === null
+                            ? "—"
+                            : `${b.schwarzschild_radius_m.toFixed(0)} m`}
+                        </div>
+                        <div className="clock-row">
+                          rate@surface:{" "}
+                          {b.time_dilation_factor_at_surface === undefined || b.time_dilation_factor_at_surface === null
+                            ? "—"
+                            : `${b.time_dilation_factor_at_surface.toFixed(9)}×`}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Html>
               )}
@@ -506,11 +516,14 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
           );
         })}
 
-        {frame.craft.map((c) => {
+        {frame.craft.map((c, idx) => {
           const posScene = new THREE.Vector3(...scaleVec3(c.position_m, sceneScale));
           const warped = warpTowardMass(posScene, ui.relativityStrength, rSScene);
           const pos = ui.relativityStrength <= 0 ? posScene : warped;
           const isSelected = selectedId === c.id;
+          // Vertical offset for craft labels - start after body labels to avoid collision
+          // Use negative offset (below object) to separate from body labels above
+          const labelYOffset = -(0.3 + idx * 1.5);
 
           const color = c.id.endsWith(".est") ? "#22c55e" : "#e2e8f0";
           const emissive = isSelected ? "#fbbf24" : color;
@@ -528,22 +541,30 @@ export function SceneHost({ frames, currentIndex, frame, selectedId, onSelect, u
               <sphereGeometry args={[0.02, 20, 20]} />
               <meshStandardMaterial color={color} emissive={emissive} emissiveIntensity={0.6} />
               {ui.showClocks && (
-                <Html distanceFactor={6}>
-                  <div className="clock">
+                <Html
+                  position={[0, labelYOffset, 0]}
+                  center
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div className={`clock ${isSelected ? 'clock--expanded' : ''}`}>
                     <div className="clock-title">{c.name}</div>
-                    <div className="clock-row">t: {frame.t_s.toFixed(1)} s</div>
-                    <div className="clock-row">
-                      τ:{" "}
-                      {c.proper_time_s === undefined || c.proper_time_s === null
-                        ? "—"
-                        : `${c.proper_time_s.toFixed(3)} s`}
-                    </div>
-                    <div className="clock-row">
-                      rate:{" "}
-                      {c.time_dilation_factor === undefined || c.time_dilation_factor === null
-                        ? "—"
-                        : `${c.time_dilation_factor.toFixed(9)}×`}
-                    </div>
+                    {isSelected && (
+                      <>
+                        <div className="clock-row">t: {frame.t_s.toFixed(1)} s</div>
+                        <div className="clock-row">
+                          τ:{" "}
+                          {c.proper_time_s === undefined || c.proper_time_s === null
+                            ? "—"
+                            : `${c.proper_time_s.toFixed(3)} s`}
+                        </div>
+                        <div className="clock-row">
+                          rate:{" "}
+                          {c.time_dilation_factor === undefined || c.time_dilation_factor === null
+                            ? "—"
+                            : `${c.time_dilation_factor.toFixed(9)}×`}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </Html>
               )}
