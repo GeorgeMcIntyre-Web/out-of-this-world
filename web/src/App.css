@@ -1,0 +1,465 @@
+/* Global styles for Quantum IMU Navigator */
+
+:root {
+  /* Colors */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-card: rgba(15, 23, 42, 0.9);
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --border-subtle: rgba(148, 163, 184, 0.1);
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-green: #22c55e;
+  --accent-amber: #f59e0b;
+
+  /* Gradients */
+  --gradient-primary: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --gradient-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+
+  /* Effects */
+  --blur: blur(12px);
+  --shadow-lg: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--gradient-bg);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+.header {
+  text-align: center;
+  padding: 2rem 1rem 1.5rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, transparent 100%);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #f1f5f9, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.header .icon {
+  margin-right: 0.5rem;
+  -webkit-text-fill-color: initial;
+}
+
+.header .subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Error banner */
+.error-banner {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+  padding: 1rem;
+  margin: 0 1rem;
+  border-radius: 10px;
+  text-align: center;
+}
+
+.error-banner .hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.8rem;
+  color: #f87171;
+}
+
+.error-banner code {
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+/* Dashboard layout */
+.dashboard {
+  flex: 1;
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem 1.5rem;
+  width: 100%;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 320px;
+  flex-shrink: 0;
+}
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.viewer-section {
+  flex: 1;
+  min-height: 400px;
+}
+
+.charts-section {
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.footer .separator {
+  margin: 0 0.5rem;
+  color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .sidebar>* {
+    flex: 1;
+    min-width: 280px;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* ============================================
+   LAYOUT - Main 3-column grid
+   ============================================ */
+.space-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr 260px;
+  gap: 1rem;
+  flex: 1;
+  padding: 1rem;
+  min-height: 0;
+}
+
+/* ============================================
+   PANELS - Left and Right sidebars
+   ============================================ */
+.panel {
+  background: var(--bg-card);
+  backdrop-filter: var(--blur);
+  border-radius: 12px;
+  padding: 1rem;
+  border: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  max-height: calc(100vh - 180px);
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.panel label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.panel select,
+.panel input[type="number"] {
+  width: 100%;
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  margin-top: 0.25rem;
+}
+
+.panel button {
+  width: 100%;
+  margin-top: 0.75rem;
+  padding: 0.6rem;
+  background: var(--accent-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.panel button:hover {
+  opacity: 0.9;
+}
+
+.panel button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.panel hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1rem 0;
+}
+
+/* ============================================
+   ROW - Inline checkbox + label
+   ============================================ */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.row input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--accent-blue);
+}
+
+/* ============================================
+   VIEWPORT - 3D scene container
+   ============================================ */
+.viewport {
+  display: flex;
+  flex-direction: column;
+  min-height: 450px;
+  background: var(--bg-card);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+
+.viewport .trajectory-viewer {
+  flex: 1;
+  border-radius: 0;
+}
+
+/* ============================================
+   TIMELINE - Playback controls
+   ============================================ */
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.timeline button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.85rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.timeline button:hover:not(:disabled) {
+  background: var(--bg-primary);
+}
+
+.timeline button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.timeline input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent-blue);
+}
+
+.timeline .time {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  min-width: 120px;
+  text-align: right;
+}
+
+/* ============================================
+   QUICKSTART - Help banner
+   ============================================ */
+.quickstart {
+  padding: 0.6rem 1rem;
+  background: rgba(59, 130, 246, 0.08);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.quickstart strong {
+  color: var(--text-primary);
+}
+
+.quickstart kbd {
+  background: var(--bg-secondary);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  border: 1px solid var(--border-subtle);
+  font-family: inherit;
+}
+
+/* ============================================
+   INSPECTOR - Key-Value data display
+   ============================================ */
+.kv {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.kv>div {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+
+.kv strong {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.mono {
+  font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+  font-size: 0.8rem;
+  color: var(--text-primary);
+}
+
+.muted {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   OFFLINE - Backend error screen
+   ============================================ */
+.offline {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  text-align: center;
+  padding: 2rem;
+}
+
+.offline h1 {
+  color: var(--accent-amber);
+  font-size: 1.5rem;
+}
+
+.offline pre {
+  background: var(--bg-secondary);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+  border: 1px solid var(--border-subtle);
+}
+
+.offline code {
+  color: var(--accent-green);
+}
+
+/* ============================================
+   TOAST - Error notification
+   ============================================ */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+}
+
+/* ============================================
+   RESPONSIVE - Tablet and mobile
+   ============================================ */
+@media (max-width: 1200px) {
+  .space-layout {
+    grid-template-columns: 220px 1fr 220px;
+  }
+}
+
+@media (max-width: 900px) {
+  .space-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr auto;
+  }
+
+  .panel {
+    max-height: none;
+  }
+
+  .viewport {
+    min-height: 350px;
+  }
+}

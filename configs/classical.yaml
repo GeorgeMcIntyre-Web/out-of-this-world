@@ -1,0 +1,39 @@
+# Classical Navigation-Grade IMU Configuration
+# Representative of high-quality FOG/RLG systems
+
+simulation:
+  name: "classical_coast"
+  duration_hours: 1.0
+  dt_seconds: 1.0
+  seed: 42
+
+imu:
+  profile: "classical"
+  # Override specific parameters (optional):
+  # accel_white_noise_ug_sqrt_hz: 100.0
+  # gyro_white_noise_deg_sqrt_h: 0.01
+
+star_tracker:
+  enabled: true
+  config: "standard"
+  update_interval_seconds: 60.0
+
+initial_conditions:
+  # Deep space scenario (no gravity)
+  position_m: [0.0, 0.0, 0.0]
+  velocity_m_s: [1000.0, 0.0, 0.0]
+  attitude_rad: [0.0, 0.0, 0.0]
+
+initial_uncertainty:
+  position_m: 10.0
+  velocity_m_s: 0.1
+  attitude_rad: 0.001
+  accel_bias_m_s2: 1.0e-4
+  gyro_bias_rad_s: 1.0e-5
+
+output:
+  directory: "results"
+  prefix: "classical"
+  save_plots: true
+  save_json: true
+  save_csv: true

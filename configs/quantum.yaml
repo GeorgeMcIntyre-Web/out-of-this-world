@@ -1,0 +1,41 @@
+# Quantum-Class IMU Configuration
+# Hypothetical parameters based on atom interferometry projections (~100x better than classical)
+
+simulation:
+  name: "quantum_coast"
+  duration_hours: 1.0
+  dt_seconds: 1.0
+  seed: 42
+
+imu:
+  profile: "quantum"
+  # Parameters are ~100x better than classical:
+  # accel_white_noise: 1 μg/√Hz (vs 100)
+  # gyro_white_noise: 0.0001 °/√h (vs 0.01)
+  # accel_bias_instability: 0.1 μg (vs 10)
+  # gyro_bias_instability: 0.0001 °/h (vs 0.01)
+
+star_tracker:
+  enabled: true
+  config: "standard"
+  update_interval_seconds: 60.0
+
+initial_conditions:
+  # Deep space scenario (no gravity)
+  position_m: [0.0, 0.0, 0.0]
+  velocity_m_s: [1000.0, 0.0, 0.0]
+  attitude_rad: [0.0, 0.0, 0.0]
+
+initial_uncertainty:
+  position_m: 10.0
+  velocity_m_s: 0.1
+  attitude_rad: 0.001
+  accel_bias_m_s2: 1.0e-5  # Better initial calibration
+  gyro_bias_rad_s: 1.0e-6
+
+output:
+  directory: "results"
+  prefix: "quantum"
+  save_plots: true
+  save_json: true
+  save_csv: true
